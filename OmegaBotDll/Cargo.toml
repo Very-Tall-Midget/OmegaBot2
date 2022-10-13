@@ -1,0 +1,27 @@
+[package]
+name = "OmegaBotDll"
+version = "2.0.0"
+edition = "2021"
+
+[lib]
+name = "omega_bot"
+crate-type = [ "cdylib" ]
+
+[dependencies]
+minhook-sys = "0.1.1"
+winapi = { version = "0.3.9", features = [ "everything" ] }
+once_cell = "1.13.0"
+bincode = "1.3.3"
+serde = { version = "1.0.140", features = [ "derive" ] }
+
+macros = { path = "macros" }
+
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+lto = true
+codegen-units = 1
+
+[features]
+count_frames = []
