@@ -21,6 +21,7 @@ mod pipe;
 mod practice_fix;
 mod replay;
 mod replay_handler;
+mod spam_bot;
 mod standard_replay;
 #[macro_use]
 mod hack_handler;

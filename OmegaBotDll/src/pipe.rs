@@ -14,7 +14,9 @@ use winapi::{
 
 use std::sync::Mutex;
 
-use crate::{hack_handler::HackName, omegabot::NoClip, replay::ReplayType};
+use crate::{
+    hack_handler::HackName, omegabot::NoClip, replay::ReplayType, spam_bot::SpamBotPlayer,
+};
 use macros::messages;
 
 messages! {
@@ -136,6 +138,7 @@ messages! {
             vec![hack.into(), 0]
         }
     },
+
     SetReplayType(ReplayType) | {
         SetReplayType(if data[0] == 1 {
             ReplayType::Frame
@@ -145,6 +148,87 @@ messages! {
     } | {
         SetReplayType(replay_type) => {
             vec![if replay_type == ReplayType::Frame { 1 } else { 2 }, 0]
+        }
+    },
+
+    // SpamBot
+    SetStraightFlyAccuracy(f32) | {
+        SetStraightFlyAccuracy(unsafe { *std::mem::transmute::<*const u16, *const f32>(data.as_ptr()) })
+    } | {
+        SetStraightFlyAccuracy(accuracy) => {
+            let mut buffer = vec![0u16; 3];
+            unsafe {
+                *std::mem::transmute::<*mut u16, *mut f32>(buffer.as_mut_ptr()) = accuracy;
+            }
+            buffer
+        }
+    },
+    SetStraightFlyPlayer(SpamBotPlayer) | {
+        SetStraightFlyPlayer(match data[0] {
+            1 => SpamBotPlayer::Player1,
+            2 => SpamBotPlayer::Player2,
+            3 => SpamBotPlayer::Both,
+            _ => unreachable!(),
+        })
+    } | {
+        SetStraightFlyPlayer(player) => {
+            vec![match player {
+                SpamBotPlayer::Player1 => 1,
+                SpamBotPlayer::Player2 => 2,
+                SpamBotPlayer::Both => 3,
+            }, 0]
+        }
+    },
+    SetStraightFlyKeybind(char) | {
+        SetStraightFlyKeybind(char::from_u32(data[0] as u32).unwrap())
+    } | {
+        SetStraightFlyKeybind(key) => {
+            vec![key as u16, 0]
+        }
+    },
+    SetSpamPress(u32) | {
+        SetSpamPress(unsafe { *std::mem::transmute::<*const u16, *const u32>(data.as_ptr()) })
+    } | {
+        SetSpamPress(frames) => {
+            let mut buffer = vec![0u16; 3];
+            unsafe {
+                *std::mem::transmute::<*mut u16, *mut u32>(buffer.as_mut_ptr()) = frames;
+            }
+            buffer
+        }
+    },
+    SetSpamRelease(u32) | {
+        SetSpamRelease(unsafe { *std::mem::transmute::<*const u16, *const u32>(data.as_ptr()) })
+    } | {
+        SetSpamRelease(frames) => {
+            let mut buffer = vec![0u16; 3];
+            unsafe {
+                *std::mem::transmute::<*mut u16, *mut u32>(buffer.as_mut_ptr()) = frames;
+            }
+            buffer
+        }
+    },
+    SetSpamPlayer(SpamBotPlayer) | {
+        SetSpamPlayer(match data[0] {
+            1 => SpamBotPlayer::Player1,
+            2 => SpamBotPlayer::Player2,
+            3 => SpamBotPlayer::Both,
+            _ => unreachable!(),
+        })
+    } | {
+        SetSpamPlayer(player) => {
+            vec![match player {
+                SpamBotPlayer::Player1 => 1,
+                SpamBotPlayer::Player2 => 2,
+                SpamBotPlayer::Both => 3,
+            }, 0]
+        }
+    },
+    SetSpamKeybind(char) | {
+        SetSpamKeybind(char::from_u32(data[0] as u32).unwrap())
+    } | {
+        SetSpamKeybind(key) => {
+            vec![key as u16, 0]
         }
     },
 }
@@ -279,111 +363,3 @@ impl Pipe {
         self.hpipe != INVALID_HANDLE_VALUE && self.connected
     }
 }
-
-// #[derive(Debug, Clone, PartialEq)]
-// pub enum Message {
-//     Ping,
-//     Error(String),
-//     Received,
-//     Exit,
-//
-//     FPS(f32),
-//     Speedhack(f32),
-//
-//     StartPlayback,
-//     StopPlayback,
-//     StartRecording,
-//     StopRecording,
-//
-//     SaveReplay(String),
-//     LoadReplay(String),
-//
-//     ApplyHack(HackName),
-//     RestoreHack(HackName),
-//
-//     SetReplayType(ReplayType),
-// }
-//
-// macro_rules! impl_messages {
-//     ($($num:literal: $from_vec:expr => $msg:pat => $to_vec:expr),* $(,)?) => {
-//         #[allow(unused_variables)]
-//         impl Into<u16> for Message {
-//             fn into(self) -> u16 {
-//                 match self {
-//                     $($msg => $num,)*
-//                 }
-//             }
-//         }
-//
-//         impl Into<Vec<u16>> for Message {
-//             fn into(self) -> Vec<u16> {
-//                 match self {
-//                     $($msg => {
-//                         let mut vec: Vec<u16> = vec![$num];
-//                         vec.extend($to_vec.iter());
-//                         vec
-//                     })*
-//                 }
-//             }
-//         }
-//
-//         impl Into<Message> for Vec<u16> {
-//             fn into(self) -> Message {
-//                 match self[0] {
-//                     $($num => $from_vec(&self[1..]),)*
-//                     _ => panic!("Invalid message"),
-//                 }
-//             }
-//         }
-//     }
-// }
-//
-// impl_messages! {
-//     1: |_| Message::Ping => Message::Ping => vec![0],
-//     2: |data: &[u16]| Message::Error(string_from_utf16!(data)) => Message::Error(err) => {
-//         let mut buffer = vec![0u16; err.len() + 1];
-//         buffer.copy_from_slice(err.encode_utf16().collect::<Vec<u16>>().as_slice());
-//         buffer
-//     },
-//     3: |_| Message::Received => Message::Received => vec![0],
-//     4: |_| Message::Exit => Message::Exit => vec![0],
-//     5: |data: &[u16]| Message::FPS(unsafe {
-//             *std::mem::transmute::<*const u16, *const f32>(data.as_ptr())
-//         }) => Message::FPS(fps) => {
-//         let mut buffer = vec![0u16; 3];
-//         unsafe {
-//             *std::mem::transmute::<*mut u16, *mut f32>(buffer.as_mut_ptr()) = fps;
-//         }
-//         buffer
-//     },
-//     6: |data: &[u16]| Message::Speedhack(unsafe {
-//             *std::mem::transmute::<*const u16, *const f32>(data.as_ptr())
-//         }) => Message::Speedhack(speedhack) => {
-//         let mut buffer = vec![0u16; 3];
-//         unsafe {
-//             *std::mem::transmute::<*mut u16, *mut f32>(buffer.as_mut_ptr()) = speedhack;
-//         }
-//         buffer
-//     },
-//     7: |_| Message::StartPlayback => Message::StartPlayback=> vec![0],
-//     8: |_| Message::StopPlayback => Message::StopPlayback=> vec![0],
-//     9: |_| Message::StartRecording => Message::StartRecording=> vec![0],
-//     10: |_| Message::StopRecording => Message::StopRecording => vec![0],
-//     11: |data: &[u16]| Message::SaveReplay(string_from_utf16!(data)) => Message::SaveReplay(filename) => {
-//         let mut buffer = vec![0u16; filename.len() + 1];
-//         buffer.copy_from_slice(filename.encode_utf16().collect::<Vec<u16>>().as_slice());
-//         buffer
-//     },
-//     12: |data: &[u16]| Message::LoadReplay(string_from_utf16!(data)) => Message::LoadReplay(filename) => {
-//         let mut buffer = vec![0u16; filename.len() + 1];
-//         buffer.copy_from_slice(filename.encode_utf16().collect::<Vec<u16>>().as_slice());
-//         buffer
-//     },
-//     13: |data: &[u16]| Message::ApplyHack(data[0].into()) => Message::ApplyHack(hack) => vec![hack.into(), 0],
-//     14: |data: &[u16]| Message::RestoreHack(data[0].into()) => Message::RestoreHack(hack) => vec![hack.into(), 0],
-//     15: |data: &[u16]| Message::SetReplayType(if data[0] == 1 {
-//             ReplayType::Frame
-//         } else {
-//             ReplayType::XPos
-//         }) => Message::SetReplayType(replay_type) => vec![if replay_type == ReplayType::Frame { 1 } else { 2 }, 0],
-// }

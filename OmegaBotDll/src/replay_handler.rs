@@ -1,5 +1,6 @@
 use crate::{
-    full_replay::*, gd, pipe::Message, replay::*, standard_replay::*, utils::IsNull, OMEGABOT,
+    full_replay::*, gd, pipe::Message, replay::*, spam_bot::*, standard_replay::*, utils::IsNull,
+    OMEGABOT,
 };
 
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -34,6 +35,7 @@ pub struct ReplayHandler {
     accuracy_fix: bool,
     default_fps: f32,
     frame: u32,
+    spam_bot: SpamBot,
 }
 
 #[cfg(not(feature = "count_frames"))]
@@ -45,6 +47,7 @@ pub struct ReplayHandler {
     default_fps: f32,
     frame_offset: u32,
     time_offset: f64,
+    spam_bot: SpamBot,
 }
 
 impl Default for ReplayHandler {
@@ -57,6 +60,7 @@ impl Default for ReplayHandler {
             accuracy_fix: false,
             default_fps: 60.,
             frame: 0,
+            spam_bot: Default::default(),
         }
     }
 
@@ -70,6 +74,7 @@ impl Default for ReplayHandler {
             default_fps: 60.,
             frame_offset: 0,
             time_offset: 0.,
+            spam_bot: Default::default(),
         }
     }
 }
@@ -143,21 +148,24 @@ impl ReplayHandler {
 
     #[cfg(feature = "count_frames")]
     pub fn on_update(&mut self, play_layer: gd::PlayLayer) {
-        if unsafe { !play_layer.is_dead() && !*play_layer.is_paused() }
-            && self.state == ReplayHandlerState::Playing
-        {
-            unknown_replay! {
-                &mut self.replay => {
-                    replay.for_all_current_clicks(
-                        match replay.get_type() {
-                            ReplayType::XPos => {
-                                Location::XPos(unsafe { *play_layer.player1().get_position().0 })
-                            }
-                            ReplayType::Frame => Location::Frame(self.frame),
-                        },
-                        ReplayHandler::handle_click,
-                    );
+        if unsafe { !play_layer.is_dead() && !*play_layer.is_paused() } {
+            if self.state == ReplayHandlerState::Playing {
+                unknown_replay! {
+                    &mut self.replay => {
+                        replay.for_all_current_clicks(
+                            match replay.get_type() {
+                                ReplayType::XPos => {
+                                    Location::XPos(unsafe { *play_layer.player1().get_position().0 })
+                                }
+                                ReplayType::Frame => Location::Frame(self.frame),
+                            },
+                            ReplayHandler::handle_click,
+                        );
+                    }
                 }
+            }
+            for click in self.spam_bot.update(play_layer) {
+                self.click_h(play_layer, click);
             }
         }
         if play_layer
@@ -193,6 +201,10 @@ impl ReplayHandler {
                     }
                 }
             }
+        }
+
+        for click in self.spam_bot.update(play_layer) {
+            self.click_h(play_layer, click);
         }
     }
 
@@ -355,6 +367,10 @@ impl ReplayHandler {
             self.time_offset = 0.;
         }
 
+        if self.spam_bot.is_running() {
+            self.spam_bot.stop();
+        }
+
         unsafe {
             OMEGABOT.get_practice_fix().on_reset(play_layer);
         }
@@ -374,6 +390,30 @@ impl ReplayHandler {
                     )
                 }
             }
+        }
+    }
+
+    pub fn on_quit(&mut self) {
+        self.spam_bot.stop();
+    }
+
+    pub fn toggle_straight_fly(&mut self) {
+        if self.spam_bot.is_straight_flying() {
+            for click in self.spam_bot.stop() {
+                self.click_h(gd::GameManager::get().play_layer(), click);
+            }
+        } else {
+            self.spam_bot.start_straight_fly();
+        }
+    }
+
+    pub fn toggle_spam(&mut self) {
+        if self.spam_bot.is_spamming() {
+            for click in self.spam_bot.stop() {
+                self.click_h(gd::GameManager::get().play_layer(), click);
+            }
+        } else {
+            self.spam_bot.start_spam();
         }
     }
 
@@ -500,5 +540,9 @@ impl ReplayHandler {
 
     pub fn set_accuracy_fix(&mut self, accuracy_fix: bool) {
         self.accuracy_fix = accuracy_fix;
+    }
+
+    pub fn get_spam_bot(&mut self) -> &mut SpamBot {
+        &mut self.spam_bot
     }
 }

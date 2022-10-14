@@ -23,6 +23,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->titleBarLayout->addWidget(ui->tabWidget);
     ui->titleBarLayout->addWidget(ui->injectButton);
 
+    keybindValidator = new QRegExpValidator(QRegExp("[a-zA-Z0-9]"));
+    ui->spamKeybindLineEdit->setValidator(keybindValidator);
+    ui->straightFlyKeybindLineEdit->setValidator(keybindValidator);
+
     errorParent = this;
 
     Attach();
@@ -452,3 +456,63 @@ void MainWindow::on_noClipSpinBox_currentIndexChanged(int index)
     });
 }
 
+
+void MainWindow::on_pressIntervalSpinBox_valueChanged(int arg1)
+{
+    unsigned frames = arg1;
+    QueueMessage([=] (QString* error) {
+        return pipe.SendMSG(Pipe::SetSpamPress, QString::fromWCharArray(ReCa<const wchar_t*>(&frames), sizeof(int) / sizeof(wchar_t)), true, error);
+    });
+}
+
+
+void MainWindow::on_releaseIntervalSpinBox_valueChanged(int arg1)
+{
+    unsigned frames = arg1;
+    QueueMessage([=] (QString* error) {
+        return pipe.SendMSG(Pipe::SetSpamRelease, QString::fromWCharArray(ReCa<const wchar_t*>(&frames), sizeof(int) / sizeof(wchar_t)), true, error);
+    });
+}
+
+
+void MainWindow::on_spamPlayerComboBox_currentIndexChanged(int index)
+{
+    QueueMessage([=] (QString* error) {
+        return pipe.SendMSG(Pipe::SetSpamPlayer, QString("%1").arg((char)(index + 1)), true, error);
+    });
+}
+
+void MainWindow::on_spamKeybindLineEdit_textChanged(const QString& text)
+{
+    if (text.toUpper() == ui->straightFlyKeybindLineEdit->text().toUpper()) ui->spamKeybindLineEdit->clear();
+    else
+        QueueMessage([=] (QString* error) {
+            return pipe.SendMSG(Pipe::SetSpamKeybind, ui->spamKeybindLineEdit->text().toUpper(), true, error);
+        });
+}
+
+void MainWindow::on_straightFlyAccuracySpinBox_valueChanged(int arg1)
+{
+    float accuracy = arg1;
+    QueueMessage([=] (QString* error) {
+        return pipe.SendMSG(Pipe::SetStraightFlyAccuracy, QString::fromWCharArray(ReCa<const wchar_t*>(&accuracy), sizeof(float) / sizeof(wchar_t)), true, error);
+    });
+}
+
+
+void MainWindow::on_straightFlyPlayerComboBox_currentIndexChanged(int index)
+{
+    QueueMessage([=] (QString* error) {
+        return pipe.SendMSG(Pipe::SetStraightFlyPlayer, QString("%1").arg((char)(index + 1)), true, error);
+    });
+}
+
+
+void MainWindow::on_straightFlyKeybindLineEdit_textChanged(const QString& text)
+{
+    if (text.toUpper() == ui->spamKeybindLineEdit->text().toUpper()) ui->straightFlyKeybindLineEdit->clear();
+    else
+        QueueMessage([=] (QString* error) {
+            return pipe.SendMSG(Pipe::SetStraightFlyKeybind, ui->straightFlyKeybindLineEdit->text().toUpper(), true, error);
+        });
+}

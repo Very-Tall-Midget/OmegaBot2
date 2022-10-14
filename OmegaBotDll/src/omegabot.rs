@@ -61,6 +61,9 @@ pub struct OmegaBot {
     frame_count_int: u32,
 
     frame_advance: bool,
+
+    straight_fly_keybind: char,
+    spam_keybind: char,
 }
 
 impl OmegaBot {
@@ -81,6 +84,8 @@ impl OmegaBot {
             frame_count_float: 0.,
             frame_count_int: 0,
             frame_advance: false,
+            straight_fly_keybind: 'K',
+            spam_keybind: 'J',
         }
     }
 
@@ -354,6 +359,34 @@ impl OmegaBot {
                 self.replay_handler.set_replay_type(replay_type);
                 Some(Message::Received)
             }
+            Message::SetStraightFlyAccuracy(accuracy) => {
+                self.replay_handler.get_spam_bot().y_accuracy = accuracy;
+                Some(Message::Received)
+            }
+            Message::SetStraightFlyPlayer(player) => {
+                self.replay_handler.get_spam_bot().straight_fly_player = player;
+                Some(Message::Received)
+            }
+            Message::SetStraightFlyKeybind(key) => {
+                self.straight_fly_keybind = key;
+                Some(Message::Received)
+            }
+            Message::SetSpamPress(frames) => {
+                self.replay_handler.get_spam_bot().spam_press = frames;
+                Some(Message::Received)
+            }
+            Message::SetSpamRelease(frames) => {
+                self.replay_handler.get_spam_bot().spam_release = frames;
+                Some(Message::Received)
+            }
+            Message::SetSpamPlayer(player) => {
+                self.replay_handler.get_spam_bot().spam_player = player;
+                Some(Message::Received)
+            }
+            Message::SetSpamKeybind(key) => {
+                self.spam_keybind = key;
+                Some(Message::Received)
+            }
         }
     }
 
@@ -419,28 +452,6 @@ impl OmegaBot {
     pub fn on_reset_level(&mut self, play_layer: gd::PlayLayer) {
         self.block_update();
 
-        // unsafe {
-        //     if self.player.is_null() {
-        //         // Allocation size of player
-        //         let addr = winapi::um::memoryapi::VirtualAlloc(
-        //             0 as _,
-        //             0x9E0,
-        //             winapi::um::winnt::MEM_RESERVE | winapi::um::winnt::MEM_COMMIT,
-        //             winapi::um::winnt::PAGE_EXECUTE_READWRITE,
-        //         ) as usize;
-        //         // Call constructor
-        //         let addr = std::mem::transmute::<usize, unsafe extern "fastcall" fn(usize) -> usize>(
-        //             gd::get_base() + 0x1E6650,
-        //         )(addr);
-        //         // Call init
-        //         std::mem::transmute::<
-        //             usize,
-        //             unsafe extern "fastcall" fn(usize, usize, usize, usize, usize),
-        //         >(gd::get_base() + 0x1E6DA0)(addr, 0, 133, 114, 0);
-        //         self.player = gd::PlayerObject::from_address(addr);
-        //     }
-        // }
-
         self.replay_handler.on_reset_level(play_layer);
         self.update_fps();
 
@@ -463,6 +474,7 @@ impl OmegaBot {
     }
 
     pub fn on_quit(&mut self) {
+        self.replay_handler.on_quit();
         self.practice_fix.clear_checkpoints();
     }
 
@@ -483,6 +495,14 @@ impl OmegaBot {
                 self.get_delta_time(),
             );
         }
+    }
+
+    pub fn toggle_straight_fly(&mut self) {
+        self.replay_handler.toggle_straight_fly();
+    }
+
+    pub fn toggle_spam(&mut self) {
+        self.replay_handler.toggle_spam();
     }
 }
 
@@ -581,5 +601,13 @@ impl OmegaBot {
 
     pub fn get_frame_advance_key(&self) -> char {
         'C'
+    }
+
+    pub fn get_straight_fly_key(&self) -> char {
+        self.straight_fly_keybind
+    }
+
+    pub fn get_spam_key(&self) -> char {
+        self.spam_keybind
     }
 }

@@ -37,6 +37,14 @@ public:
         RestoreHack,
 
         SetReplayType,
+
+        SetStraightFlyAccuracy,
+        SetStraightFlyPlayer,
+        SetStraightFlyKeybind,
+        SetSpamPress,
+        SetSpamRelease,
+        SetSpamPlayer,
+        SetSpamKeybind,
     };
 private:
     HANDLE hPipe;

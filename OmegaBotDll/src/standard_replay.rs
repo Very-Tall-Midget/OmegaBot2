@@ -112,7 +112,6 @@ impl Replay for StandardReplay {
     fn for_all_current_clicks(&mut self, location: Location, f: fn(&Click)) {
         let mut click_opt = self.get_current_click(location);
         while let Some(click) = click_opt {
-            println!("calling click: {click:?}");
             f(click);
             click_opt = self.get_current_click(location);
         }

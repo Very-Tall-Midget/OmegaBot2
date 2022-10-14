@@ -100,18 +100,23 @@ pub mod cocos2d {
     define_hook! { dispatch_keyboard_msg_h|DISPATCH_KEYBOARD_MSG_O "fastcall"(dispatcher: usize, _edx: usize, key_code: u32, press: bool) -> bool {
         let mut used = false;
 
-        println!("{} {}", key_code, press);
-
-        if press {
-            if char::from_u32(key_code).expect("wtf lmao") == OMEGABOT.get_frame_advance_toggle_key() {
-                OMEGABOT.toggle_frame_advance();
-                used = true;
-            } else if char::from_u32(key_code).expect("wtf lmao 2") == OMEGABOT.get_frame_advance_key() {
-                OMEGABOT.advance_frame();
-                used = true;
+        if let Some(c) = char::from_u32(key_code) {
+            if press {
+                if c == OMEGABOT.get_frame_advance_toggle_key() {
+                    OMEGABOT.toggle_frame_advance();
+                    used = true;
+                } else if c == OMEGABOT.get_frame_advance_key() {
+                    OMEGABOT.advance_frame();
+                    used = true;
+                } else if c == OMEGABOT.get_straight_fly_key() {
+                    OMEGABOT.toggle_straight_fly();
+                    used = true;
+                } else if c == OMEGABOT.get_spam_key() {
+                    OMEGABOT.toggle_spam();
+                    used = true;
+                }
             }
         }
-
         used || get_orig!(DISPATCH_KEYBOARD_MSG_O "fastcall"(usize, usize, u32, bool) -> bool)(dispatcher, 0, key_code, press)
     }}
 }
@@ -127,6 +132,7 @@ pub mod play_layer {
 
     define_hook! { init_h|INIT_O "fastcall"(play_layer: usize, _edx: usize, level: usize) {
         get_orig!(INIT_O "fastcall"(usize, usize, usize) -> usize)(play_layer, 0, level);
+        // idfk it works so i keep it
         asm!(
             "push eax",
             "push ebx",
