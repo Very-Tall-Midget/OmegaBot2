@@ -1,7 +1,6 @@
-use crate::gd;
 use crate::replay::ClickType;
-use crate::utils::IsNull;
 use crate::OMEGABOT;
+use gd::IsNull;
 
 struct CheckpointData {
     x_accel: f64,

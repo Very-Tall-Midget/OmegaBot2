@@ -1,3 +1,7 @@
+#[macro_use]
+#[allow(dead_code)]
+mod utils;
+pub use utils::IsNull;
 mod ccapplication;
 pub use ccapplication::CCApplication;
 use winapi::shared::minwindef::HMODULE;

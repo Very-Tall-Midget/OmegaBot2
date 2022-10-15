@@ -1,6 +1,5 @@
-use crate::gd;
 use crate::replay::ClickType;
-use crate::utils::IsNull;
+use gd::IsNull;
 
 #[derive(Debug, Clone, Copy)]
 enum SpamBotState {

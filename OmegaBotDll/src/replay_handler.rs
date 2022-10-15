@@ -1,6 +1,6 @@
 use crate::{
-    full_replay::*, gd, pipe::Message, replay::*, spam_bot::*, standard_replay::*, utils::IsNull,
-    OMEGABOT,
+    gd, gd::IsNull, pipe::Message, replay::full_replay::*, replay::standard_replay::*, replay::*,
+    spam_bot::*, OMEGABOT,
 };
 
 #[derive(PartialEq, Eq, Clone, Copy)]

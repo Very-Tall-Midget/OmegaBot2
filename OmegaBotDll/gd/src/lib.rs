@@ -1,12 +1,15 @@
 use winapi::um::winnt::LPCSTR;
 
+#[macro_use]
+mod utils;
+pub use utils::IsNull;
 mod play_layer;
 pub use play_layer::PlayLayer;
 mod game_manager;
 pub use game_manager::GameManager;
 mod player_object;
-pub use player_object::PlayerObject;
 pub use player_object::GameMode;
+pub use player_object::PlayerObject;
 mod level_settings;
 pub use level_settings::LevelSettings;
 mod game_object;

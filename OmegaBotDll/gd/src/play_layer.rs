@@ -19,13 +19,6 @@ impl PlayLayer {
         PlayLayer { address }
     }
 
-    pub fn update(&self, dt: f32) {
-        use crate::hooks::play_layer::*;
-        unsafe {
-            get_orig!(UPDATE_O "fastcall"(usize, usize, f32))(self.address, 0, dt);
-        }
-    }
-
     pub fn is_dead(&self) -> bool {
         unsafe {
             *read_value(self.address + 0x39C)

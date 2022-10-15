@@ -1,4 +1,6 @@
+extern crate cocos2d;
 extern crate macros;
+extern crate replay;
 
 use winapi::shared::minwindef::{BOOL, DWORD, FALSE, HMODULE, LPDWORD, LPVOID, TRUE};
 use winapi::um::handleapi::INVALID_HANDLE_VALUE;
@@ -6,12 +8,9 @@ use winapi::um::minwinbase::LPSECURITY_ATTRIBUTES;
 use winapi::um::winnt::DLL_PROCESS_ATTACH;
 
 #[macro_use]
+#[allow(dead_code)]
 mod utils;
-#[allow(dead_code)]
-mod cocos2d;
-mod full_replay;
-#[allow(dead_code)]
-mod gd;
+pub use gd;
 mod hack;
 mod hooks;
 mod mutex_count;
@@ -19,10 +18,8 @@ mod omegabot;
 mod patch;
 mod pipe;
 mod practice_fix;
-mod replay;
 mod replay_handler;
 mod spam_bot;
-mod standard_replay;
 #[macro_use]
 mod hack_handler;
 

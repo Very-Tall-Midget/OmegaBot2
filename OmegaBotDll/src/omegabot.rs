@@ -1,8 +1,8 @@
 use once_cell::sync::Lazy;
 
 use crate::{
-    cocos2d, create_hack, gd, hack_handler::*, hooks, mutex_count::*, pipe::*,
-    practice_fix::PracticeFix, replay::*, replay_handler::*, utils::*,
+    cocos2d, create_hack, gd, gd::IsNull, hack_handler::*, hooks, mutex_count::*, pipe::*,
+    practice_fix::PracticeFix, replay::*, replay_handler::*,
 };
 
 pub static mut OMEGABOT: Lazy<Box<OmegaBot>> = Lazy::new(|| Box::new(OmegaBot::new()));

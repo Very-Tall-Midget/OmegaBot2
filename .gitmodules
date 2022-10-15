@@ -1,0 +1,3 @@
+[submodule "OmegaBotDll\\URL"]
+	path = OmegaBotDll\\URL
+	url = git@github.com:Very-Tall-Midget/UniversalReplayLibrary.git

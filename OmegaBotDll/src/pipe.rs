@@ -14,10 +14,9 @@ use winapi::{
 
 use std::sync::Mutex;
 
-use crate::{
-    hack_handler::HackName, omegabot::NoClip, replay::ReplayType, spam_bot::SpamBotPlayer,
-};
+use crate::{hack_handler::HackName, omegabot::NoClip, spam_bot::SpamBotPlayer};
 use macros::messages;
+use replay::ReplayType;
 
 messages! {
     Ping,

@@ -50,36 +50,6 @@ macro_rules! lpcstr(
     }
 );
 
-pub trait IsNull {
-    fn is_null(&self) -> bool;
-
-    fn expect(&self, error: &str) -> &Self {
-        if self.is_null() {
-            panic!("{}", error);
-        }
-        self
-    }
-
-    fn if_not_null<T>(&self, f: impl FnOnce(&Self) -> T) -> Option<T> {
-        if !self.is_null() {
-            Some(f(self))
-        } else {
-            None
-        }
-    }
-}
-
-#[macro_export]
-macro_rules! impl_is_null(
-    ($t:ty) => {
-        impl $crate::utils::IsNull for $t {
-            fn is_null(&self) -> bool {
-                self.address == 0
-            }
-        }
-    }
-);
-
 #[macro_export]
 macro_rules! get_orig (
     ($orig_name:ident $callconv:literal($($t:ty),+) $(-> $ret:ty)?) => {

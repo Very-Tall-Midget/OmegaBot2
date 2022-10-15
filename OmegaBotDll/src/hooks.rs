@@ -1,4 +1,3 @@
-use crate::gd;
 use minhook_sys::*;
 use std::ffi::CStr;
 
@@ -73,7 +72,7 @@ macro_rules! remove_hook (
 );
 
 pub mod cocos2d {
-    use crate::{gd, utils::IsNull, OMEGABOT};
+    use crate::{gd, gd::IsNull, OMEGABOT};
 
     define_hook! { schedule_update_h|SCHEDULE_UPDATE_O "fastcall"(scheduler: usize, _edx: usize, real_dt: f32) {
         if !OMEGABOT.wait_for_update() {
@@ -278,7 +277,7 @@ pub unsafe fn hook() {
 
     // cocos2d hooks
     {
-        use cocos2d::*;
+        use self::cocos2d::*;
         create_hook!(SCHEDULE_UPDATE_O -> schedule_update_h @ "libcocos2d.dll"."?update@CCScheduler@cocos2d@@UAEXM@Z");
         create_hook!(DISPATCH_KEYBOARD_MSG_O -> dispatch_keyboard_msg_h @ "libcocos2d.dll"."?dispatchKeyboardMSG@CCKeyboardDispatcher@cocos2d@@QAE_NW4enumKeyCodes@2@_N@Z");
     }
