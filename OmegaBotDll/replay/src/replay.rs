@@ -69,7 +69,6 @@ pub trait Replay {
     fn reset(&mut self, location: Location, wipe: bool);
     fn finalise(&mut self);
 
-    fn for_all_current_clicks(&mut self, location: Location, f: fn(&Click));
     fn get_current_click(&mut self, location: Location) -> Option<&mut Click>;
     fn get_current_clicks(&mut self, location: Location) -> Vec<Click>;
     fn get_last_click(&mut self, player2: bool) -> Option<&Click>;

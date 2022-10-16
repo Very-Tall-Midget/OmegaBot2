@@ -185,6 +185,7 @@ impl From<CStandardReplay> for StandardReplay {
 
 impl Drop for CStandardReplay {
     fn drop(&mut self) {
+        // auto deallocation exploitation bc I am too lazy to do it manually
         unsafe {
             Box::from_raw(std::slice::from_raw_parts_mut(
                 self.clicks,
@@ -197,6 +198,7 @@ impl Drop for CStandardReplay {
 // Yes this very very inefficient, but it doesn't matter as it will only be used by the macro editor
 macro_rules! c_replay {
     ($self:ident as $replay:ident $code:block) => {
+        #[allow(unused_mut)]
         let mut $replay: StandardReplay = $self.clone().into();
         $code;
         *$self = $replay.into();
@@ -210,9 +212,124 @@ impl CStandardReplay {
     }
 
     #[no_mangle]
-    pub extern "C" fn add_click(&mut self, click: &CClick) {
+    pub extern "C" fn create(fps: f32, replay_type: CReplayType) -> Self {
+        StandardReplay {
+            initial_fps: fps,
+            current_fps: fps,
+            replay_type: replay_type.into(),
+            current_click: 0,
+            clicks: Vec::new(),
+        }
+        .into()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_click(&mut self, click: CClick) {
         c_replay!(self as replay {
-            replay.add_click(click.clone().into());
+            replay.clicks.push(click.clone().into());
         });
+    }
+
+    #[no_mangle]
+    pub extern "C" fn insert_click(&mut self, index: usize, click: CClick) {
+        c_replay!(self as replay {
+            replay.clicks.insert(index, click.clone().into());
+        });
+    }
+
+    #[no_mangle]
+    pub extern "C" fn change_fps(&mut self, location: CLocation, fps: f32) {
+        c_replay!(self as replay {
+            replay.clicks.push(Click {
+                location: location.into(),
+                click_type: ClickType::FpsChange(fps),
+            });
+        });
+    }
+
+    #[no_mangle]
+    pub extern "C" fn reset(&mut self, location: CLocation, wipe: bool) {
+        c_replay!(self as replay {
+            replay.reset(location.into(), wipe);
+        });
+    }
+
+    #[no_mangle]
+    pub extern "C" fn finalise(&mut self) {
+        c_replay!(self as replay {
+            replay.finalise();
+        });
+    }
+
+    #[no_mangle]
+    pub extern "C" fn for_all_current_clicks(
+        &mut self,
+        location: CLocation,
+        f: extern "C" fn(&CClick),
+    ) {
+        c_replay!(self as replay {
+            replay.for_all_current_clicks(location.into(), |c| f(&c.clone().into()));
+        });
+    }
+
+    #[no_mangle]
+    pub extern "C" fn get_current_click(
+        &mut self,
+        location: CLocation,
+        found_click: &mut bool,
+    ) -> CClick {
+        let out;
+        c_replay!(self as replay {
+            let click = replay.get_current_click(location.into());
+            *found_click = click.is_some();
+            out = click.cloned().unwrap_or(Click {location: Location::XPos(0), click_type: ClickType::None}).clone().into();
+        });
+        out
+    }
+
+    #[no_mangle]
+    pub extern "C" fn get_current_clicks(
+        &mut self,
+        location: CLocation,
+        number_of_clicks: &mut usize,
+    ) -> *mut CClick {
+        let vec;
+        c_replay!(self as replay {
+            vec = replay.get_current_clicks(location.into());
+        });
+        *number_of_clicks = vec.len();
+        Box::into_raw(vec.into_boxed_slice()) as *mut CClick
+    }
+
+    #[no_mangle]
+    pub extern "C" fn get_last_click(&mut self, player2: bool, found_click: &mut bool) -> CClick {
+        let out;
+        c_replay!(self as replay {
+            let click = replay.get_last_click(player2);
+            *found_click = click.is_some();
+            out = click.cloned().unwrap_or(Click {location: Location::XPos(0), click_type: ClickType::None}).clone().into();
+        });
+        out
+    }
+
+    #[no_mangle]
+    pub extern "C" fn serialise(&mut self, success: &mut bool, size: &mut usize) -> *mut u8 {
+        let out;
+        c_replay!(self as replay {
+            let res = replay.serialise();
+            *success = res.is_ok();
+            out = if let Ok(res) = res {
+                *size = res.len();
+                Box::into_raw(res.into_boxed_slice()) as *mut u8
+            } else {
+                std::ptr::null_mut()
+            };
+        });
+        out
+    }
+
+    #[no_mangle]
+    pub extern "C" fn is_done(&self) -> bool {
+        self.current_click >= self.total_clicks
     }
 }

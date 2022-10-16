@@ -92,10 +92,6 @@ impl Replay for FullReplay {
         self.frames.shrink_to_fit();
     }
 
-    fn for_all_current_clicks(&mut self, location: Location, f: fn(&Click)) {
-        todo!()
-    }
-
     fn get_current_click(&mut self, location: Location) -> Option<&mut Click> {
         todo!()
     }
@@ -131,6 +127,10 @@ impl Replay for FullReplay {
 }
 
 impl FullReplay {
+    pub fn for_all_current_clicks(&mut self, location: Location, f: impl Fn(&Click)) {
+        todo!()
+    }
+
     pub fn deserialise(data: Vec<u8>) -> Result<Self, String> {
         let res = bincode::deserialize(&data);
         if let Err(res) = res {

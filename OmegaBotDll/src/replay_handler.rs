@@ -136,16 +136,6 @@ impl ReplayHandler {
         }
     }
 
-    fn handle_click(c: &Click) {
-        unsafe {
-            if let ClickType::FpsChange(_) = c.click_type {
-                OMEGABOT.update_fps();
-            } else {
-                OMEGABOT.click(gd::GameManager::get().play_layer(), c.click_type);
-            }
-        }
-    }
-
     #[cfg(feature = "count_frames")]
     pub fn on_update(&mut self, play_layer: gd::PlayLayer) {
         if unsafe { !play_layer.is_dead() && !*play_layer.is_paused() } {
@@ -159,7 +149,13 @@ impl ReplayHandler {
                                 }
                                 ReplayType::Frame => Location::Frame(self.frame),
                             },
-                            ReplayHandler::handle_click,
+                            |c| unsafe {
+                                if let ClickType::FpsChange(_) = c.click_type {
+                                    OMEGABOT.update_fps();
+                                } else {
+                                    OMEGABOT.click(gd::GameManager::get().play_layer(), c.click_type);
+                                }
+                            },
                         );
                     }
                 }

@@ -109,14 +109,6 @@ impl Replay for StandardReplay {
         self.clicks.shrink_to_fit();
     }
 
-    fn for_all_current_clicks(&mut self, location: Location, f: fn(&Click)) {
-        let mut click_opt = self.get_current_click(location);
-        while let Some(click) = click_opt {
-            f(click);
-            click_opt = self.get_current_click(location);
-        }
-    }
-
     fn get_current_click(&mut self, location: Location) -> Option<&mut Click> {
         if self.current_click >= self.clicks.len() {
             None
@@ -184,6 +176,14 @@ impl Replay for StandardReplay {
 
 #[allow(dead_code)]
 impl StandardReplay {
+    pub fn for_all_current_clicks(&mut self, location: Location, f: impl Fn(&Click)) {
+        let mut click_opt = self.get_current_click(location);
+        while let Some(click) = click_opt {
+            f(click);
+            click_opt = self.get_current_click(location);
+        }
+    }
+
     fn get_click(&mut self, position: usize) -> Option<&Click> {
         self.clicks.get(position)
     }
