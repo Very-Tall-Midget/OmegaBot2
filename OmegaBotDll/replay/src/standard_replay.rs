@@ -3,11 +3,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct StandardReplay {
-    initial_fps: f32,
-    current_fps: f32,
-    replay_type: ReplayType,
-    current_click: usize,
-    clicks: Vec<Click>,
+    pub(crate) initial_fps: f32,
+    pub(crate) current_fps: f32,
+    pub(crate) replay_type: ReplayType,
+    pub(crate) current_click: usize,
+    pub(crate) clicks: Vec<Click>,
 }
 
 #[allow(dead_code)]
@@ -267,6 +267,10 @@ impl StandardReplay {
         } else {
             Ok(res.unwrap())
         }
+    }
+
+    pub fn get_clicks(&self) -> &Vec<Click> {
+        &self.clicks
     }
 }
 
