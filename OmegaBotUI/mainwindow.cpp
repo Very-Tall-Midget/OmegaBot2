@@ -6,6 +6,8 @@
 #include <QThread>
 #include <QStyleFactory>
 
+#include <replay/replay.h>
+
 #define PIPE_NAME "\\\\.\\pipe\\OmegaBotPipe"
 
 MainWindow::MainWindow(QWidget *parent)

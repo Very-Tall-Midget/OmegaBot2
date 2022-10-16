@@ -22,7 +22,8 @@ HEADERS += \
     pipe.h \
     runguard.h \
     titlebar.h \
-    version.h
+    version.h \
+    replay\replay.h
 
 FORMS += \
     mainwindow.ui
@@ -30,7 +31,8 @@ FORMS += \
 LIBS += \
     -luser32 \
     -lAdvapi32 \
-    -lkernel32
+    -lkernel32 \
+    replay\replay.lib
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

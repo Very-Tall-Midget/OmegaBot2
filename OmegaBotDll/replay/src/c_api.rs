@@ -133,7 +133,7 @@ impl From<CClick> for Click {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 #[repr(C)]
 pub struct CStandardReplay {
     pub initial_fps: f32,
@@ -179,6 +179,17 @@ impl From<CStandardReplay> for StandardReplay {
             replay_type: replay.replay_type.into(),
             current_click: replay.current_click,
             clicks,
+        }
+    }
+}
+
+impl Drop for CStandardReplay {
+    fn drop(&mut self) {
+        unsafe {
+            Box::from_raw(std::slice::from_raw_parts_mut(
+                self.clicks,
+                self.total_clicks,
+            ));
         }
     }
 }
