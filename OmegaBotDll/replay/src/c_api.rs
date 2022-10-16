@@ -282,7 +282,7 @@ impl CStandardReplay {
         c_replay!(self as replay {
             let click = replay.get_current_click(location.into());
             *found_click = click.is_some();
-            out = click.cloned().unwrap_or(Click {location: Location::XPos(0), click_type: ClickType::None}).clone().into();
+            out = click.cloned().unwrap_or(Click { location: Location::XPos(0), click_type: ClickType::None }).clone().into();
         });
         out
     }
@@ -313,19 +313,39 @@ impl CStandardReplay {
     }
 
     #[no_mangle]
-    pub extern "C" fn serialise(&mut self, success: &mut bool, size: &mut usize) -> *mut u8 {
-        let out;
+    pub extern "C" fn save(&mut self, filename: *const u16, filename_length: usize) -> bool {
+        let mut success = false;
         c_replay!(self as replay {
             let res = replay.serialise();
-            *success = res.is_ok();
-            out = if let Ok(res) = res {
-                *size = res.len();
-                Box::into_raw(res.into_boxed_slice()) as *mut u8
-            } else {
-                std::ptr::null_mut()
-            };
+            if let Ok(res) = res {
+                success = std::fs::write(String::from_utf16(unsafe { std::slice::from_raw_parts(filename, filename_length) }).unwrap(), res).is_ok();
+            }
         });
-        out
+        success
+    }
+
+    #[no_mangle]
+    pub extern "C" fn load(
+        filename: *const u16,
+        filename_length: usize,
+        success: &mut bool,
+    ) -> Self {
+        let filename =
+            String::from_utf16(unsafe { std::slice::from_raw_parts(filename, filename_length) })
+                .unwrap();
+        let mut data = std::fs::read(filename).unwrap();
+        if *data.get(0).unwrap_or(&1) != 0 {
+            *success = false;
+        } else {
+            data.remove(0);
+            let res: Result<StandardReplay, _> = bincode::deserialize(&data);
+            *success = res.is_ok();
+            if let Ok(replay) = res {
+                return replay.into();
+            }
+        }
+
+        StandardReplay::new(0.0, ReplayType::XPos).into()
     }
 
     #[no_mangle]
