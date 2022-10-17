@@ -230,6 +230,15 @@ messages! {
             vec![key as u16, 0]
         }
     },
+    IgnoreInput(bool) | {
+        IgnoreInput(data[0] == 1)
+    } | {
+        IgnoreInput(ignore_input) => {
+            let mut buffer = vec![0u16; 2];
+            buffer[0] = if ignore_input { 1 } else { 0 };
+            buffer
+        }
+    },
 }
 
 pub struct Pipe {

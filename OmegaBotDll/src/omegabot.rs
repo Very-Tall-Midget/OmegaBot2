@@ -51,6 +51,7 @@ pub struct OmegaBot {
     speedhack: f32,
     respawn_time: Box<f32>,
     no_clip: NoClip,
+    ignore_input: bool,
     queued_functions: Vec<Box<dyn FnOnce()>>,
 
     update_lock: MutexCount,
@@ -77,6 +78,7 @@ impl OmegaBot {
             speedhack: 1.,
             respawn_time: Box::new(1.),
             no_clip: NoClip::Off,
+            ignore_input: true,
             update_lock: Default::default(),
             queued_functions: Vec::new(),
             queued_messages: Vec::new(),
@@ -387,6 +389,10 @@ impl OmegaBot {
                 self.spam_keybind = key;
                 Some(Message::Received)
             }
+            Message::IgnoreInput(ignore_input) => {
+                self.ignore_input = ignore_input;
+                Some(Message::Received)
+            }
         }
     }
 
@@ -609,5 +615,9 @@ impl OmegaBot {
 
     pub fn get_spam_key(&self) -> char {
         self.spam_keybind
+    }
+
+    pub fn ignore_input(&self) -> bool {
+        self.ignore_input && (self.replay_handler.get_state() == ReplayHandlerState::Playing)
     }
 }

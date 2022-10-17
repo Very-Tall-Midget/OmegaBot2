@@ -183,18 +183,6 @@ impl From<CStandardReplay> for StandardReplay {
     }
 }
 
-impl Drop for CStandardReplay {
-    fn drop(&mut self) {
-        // auto deallocation exploitation bc I am too lazy to do it manually
-        unsafe {
-            Box::from_raw(std::slice::from_raw_parts_mut(
-                self.clicks,
-                self.total_clicks,
-            ));
-        }
-    }
-}
-
 // Yes this very very inefficient, but it doesn't matter as it will only be used by the macro editor
 macro_rules! c_replay {
     ($self:ident as $replay:ident $code:block) => {
@@ -221,6 +209,16 @@ impl CStandardReplay {
             clicks: Vec::new(),
         }
         .into()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn free_clicks(&mut self) {
+        unsafe {
+            Box::from_raw(std::slice::from_raw_parts_mut(
+                self.clicks,
+                self.total_clicks,
+            ));
+        }
     }
 
     #[no_mangle]

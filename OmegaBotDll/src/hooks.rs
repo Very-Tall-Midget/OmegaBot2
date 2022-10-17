@@ -158,11 +158,17 @@ pub mod play_layer {
     }}
 
     define_hook! { push_button_h|PUSH_BUTTON_O "fastcall"(play_layer: usize, _edx: usize, param: i32, button: bool) -> u32 {
+        if OMEGABOT.ignore_input() {
+            return 0;
+        }
         OMEGABOT.on_click(gd::PlayLayer::from_address(play_layer), true, button);
         get_orig!(PUSH_BUTTON_O "fastcall"(usize, usize, i32, bool) -> u32)(play_layer, 0, param, button)
     }}
 
     define_hook! { release_button_h|RELEASE_BUTTON_O "fastcall"(play_layer: usize, _edx: usize, param: i32, button: bool) -> u32 {
+        if OMEGABOT.ignore_input() {
+            return 0;
+        }
         OMEGABOT.on_click(gd::PlayLayer::from_address(play_layer), false, button);
         get_orig!(RELEASE_BUTTON_O "fastcall"(usize, usize, i32, bool) -> u32)(play_layer, 0, param, button)
     }}

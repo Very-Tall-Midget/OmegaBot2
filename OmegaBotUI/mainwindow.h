@@ -10,6 +10,8 @@
 #include "pipe.h"
 #include "titlebar.h"
 
+#include <replay.h>
+
 #define CHECK_INJECTED if (!injected) { Error("Not injected!"); return; }
 
 enum class HackName {
@@ -49,6 +51,10 @@ private:
     void Inject();
     void Uninject();
 
+    void LoadReplays();
+    QStringList ScanDir(QDir dir);
+    void LoadClicks(const Replay::StandardReplay& replay);
+
     bool SendMessages(QString* error);
     template<typename T>
     void QueueMessage(T&& msg);
@@ -80,6 +86,8 @@ private slots:
     void on_straightFlyAccuracySpinBox_valueChanged(int arg1);
     void on_straightFlyPlayerComboBox_currentIndexChanged(int index);
     void on_straightFlyKeybindLineEdit_textChanged(const QString &arg1);
+    void on_ignoreUserInputCheckBox_stateChanged(int arg1);
+    void on_openReplaysButton_clicked();
 private:
     MemoryHandler memoryHandler;
     QQueue<std::function<bool(QString* error)>> messageQueue;

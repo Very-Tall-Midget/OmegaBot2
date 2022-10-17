@@ -2,7 +2,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++11
+CONFIG += c++17
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -22,8 +22,7 @@ HEADERS += \
     pipe.h \
     runguard.h \
     titlebar.h \
-    version.h \
-    replay\replay.h
+    version.h
 
 FORMS += \
     mainwindow.ui
@@ -31,8 +30,7 @@ FORMS += \
 LIBS += \
     -luser32 \
     -lAdvapi32 \
-    -lkernel32 \
-    replay\replay.lib
+    -lkernel32
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -49,3 +47,17 @@ RC_ICONS = logo.ico
 
 RESOURCES += \
     resources.qrc
+
+# For replay api bindings
+LIBS += \
+    -lws2_32 \
+    -lBcrypt \
+    -luserenv
+
+win32: LIBS += -L$$PWD/replay/ -lreplay
+
+INCLUDEPATH += $$PWD/replay
+DEPENDPATH += $$PWD/replay
+
+win32:!win32-g++: PRE_TARGETDEPS += $$PWD/replay/replay.lib
+else:win32-g++: PRE_TARGETDEPS += $$PWD/replay/replay.a

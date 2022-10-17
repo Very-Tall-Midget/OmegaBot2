@@ -5,8 +5,7 @@
 #include <QString>
 #include <QThread>
 #include <QStyleFactory>
-
-#include <replay/replay.h>
+#include <QProcess>
 
 #define PIPE_NAME "\\\\.\\pipe\\OmegaBotPipe"
 
@@ -32,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
     errorParent = this;
 
     Attach();
+    LoadReplays();
 }
 
 MainWindow::~MainWindow()
@@ -173,6 +173,116 @@ void MainWindow::Uninject() {
     ui->injectButton->setText("Inject");
 }
 
+void MainWindow::LoadReplays() {
+    QString text = ui->play_replayNameCombo->currentText();
+    QDir dir(QDir::currentPath().replace("/", "\\") + "\\replays");
+    if (!dir.exists())
+        dir.mkpath(".");
+
+    ui->play_replayNameCombo->clear();
+
+    QStringList replays = ScanDir(dir);
+    for (QString replay : replays)
+        ui->play_replayNameCombo->addItem(replay);
+    ui->play_replayNameCombo->setCurrentIndex(ui->play_replayNameCombo->findText(text));
+}
+
+QStringList MainWindow::ScanDir(QDir dir)
+{
+    dir.setNameFilters(QStringList("*"));
+
+    dir.setFilter(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::NoSymLinks);
+    QStringList dirList = dir.entryList();
+
+    QStringList list;
+
+    for (const QString& dirName : dirList)
+    {
+        QString newPath = QString("%1\\%2").arg(dir.absolutePath()).arg(dirName);
+        QStringList files = ScanDir(QDir(newPath));
+        for (const QString& file : files)
+            list.append(QString("%1\\%2").arg(dirName).arg(file));
+    }
+
+    dir.setFilter(QDir::Files | QDir::NoDotAndDotDot | QDir::NoSymLinks);
+    QStringList fileList = dir.entryList();
+
+    for (const QString& file : fileList)
+    {
+        QStringList fileSplit = file.split('.');
+        if (fileSplit.last() == "replay")
+        {
+            fileSplit.removeLast();
+            QString newFileName = fileSplit.join(".");
+            list.append(QString("%1").arg(newFileName));
+        }
+    }
+
+    list.sort(Qt::CaseInsensitive);
+
+    return list;
+}
+
+void MainWindow::LoadClicks(const Replay::StandardReplay& replay) {
+    ui->play_actualFpsLabel->setText(QString("%1").arg(replay.initialFps));
+
+    int index = ui->clicksList->currentRow();
+
+    ui->clicksList->clear();
+
+    ui->clicksList->setRowCount(replay.totalClicks);
+    ui->clicksList->setColumnCount(3);
+
+    QStringList headers;
+    headers << tr("Player") << tr("Type");
+    switch  (replay.replayType)
+    {
+    case Replay::ReplayType::XPos:
+        headers << tr("Pos");
+        break;
+    case Replay::ReplayType::Frame:
+        headers << tr("Frame");
+        break;
+    }
+
+    ui->clicksList->setHorizontalHeaderLabels(headers);
+    ui->clicksList->resizeColumnsToContents();
+
+    for (size_t i = 0; i < replay.totalClicks; ++i)
+    {
+        Replay::Click click = replay.clicks[i];
+
+        if (click.clickType == Replay::ClickType::None) continue;
+        if (click.clickType == Replay::ClickType::FpsChange)
+        {
+            QTableWidgetItem* playerItem = new QTableWidgetItem(tr("FPS Change"));
+            QTableWidgetItem* pressedItem = new QTableWidgetItem(QString("%1").arg(click.fps));
+
+            ui->clicksList->setItem(i, 0, playerItem);
+            ui->clicksList->setItem(i, 1, pressedItem);
+
+            QTableWidgetItem* posItem = new QTableWidgetItem(QString("%1").arg(replay.replayType == Replay::ReplayType::XPos ? click.location.location : click.location.location));
+            ui->clicksList->setItem(i, 2, posItem);
+        }
+        else
+        {
+            int player = (int)(click.clickType == Replay::ClickType::Player2Down || click.clickType == Replay::ClickType::Player2Up) + 1;
+            QTableWidgetItem* playerItem = new QTableWidgetItem(QString("%1").arg(player));
+
+            QString press = click.clickType == Replay::ClickType::Player1Down || click.clickType == Replay::ClickType::Player2Down ? tr("Press") : tr("Release");
+            QTableWidgetItem* pressedItem = new QTableWidgetItem(press);
+
+            ui->clicksList->setItem(i, 0, playerItem);
+            ui->clicksList->setItem(i, 1, pressedItem);
+
+            QTableWidgetItem* posItem = new QTableWidgetItem(QString("%1").arg(replay.replayType == Replay::ReplayType::XPos ? click.location.location : click.location.location));
+            ui->clicksList->setItem(i, 2, posItem);
+        }
+    }
+
+    ui->clicksList->selectRow(min(index, ui->clicksList->rowCount()));
+}
+
 bool MainWindow::SendMessages(QString* error) {
     if (injected && pipe.Exists()) {
         if (messageQueue.isEmpty()) {
@@ -285,8 +395,8 @@ void MainWindow::on_recordButton_clicked()
                 ui->recordButton->setText(tr("Record"));
                 QueueMessage([=] (QString* error) {
                     if (pipe.SendMSG(Pipe::SaveReplay, path, true, error)) {
-                        // TODO: LoadReplays();
-                        // TODO: ui->play_replayNameCombo->setCurrentText(replayName);
+                        ui->play_replayNameCombo->setCurrentText(replayName);
+                        LoadReplays();
                         return true;
                     } else {
                         return false;
@@ -309,7 +419,7 @@ void MainWindow::on_playButton_clicked()
         return;
     }
 
-    QString replayName = ui->replayNameLineEdit->text();
+    QString replayName = ui->play_replayNameCombo->currentText();
     if (replayName.isEmpty() || replayName == "")
     {
         Error("Please enter a replay name");
@@ -328,8 +438,22 @@ void MainWindow::on_playButton_clicked()
             }
         });
     } else {
-        QString replayName = ui->replayNameLineEdit->text().replace("/", "\\");
+        QString replayName = ui->play_replayNameCombo->currentText().replace("/", "\\");
         QString path = QDir::currentPath().replace("/", "\\") + "\\replays\\" + replayName + ".replay";
+
+        bool success = false;
+        wchar_t* filename = (wchar_t*)malloc(sizeof(wchar_t) * (path.length() + 1));
+        path.toWCharArray(filename);
+        auto replay = Replay::load((const uint16_t*)filename, path.length(), &success);
+        free(filename);
+
+        if (!success) {
+            Error("Failed to load replay");
+            return;
+        }
+
+        LoadClicks(replay);
+        Replay::free_clicks(&replay);
 
         QueueMessage([=] (QString* error) {
             if (pipe.SendMSG(Pipe::LoadReplay, path, true, error)) {
@@ -517,4 +641,16 @@ void MainWindow::on_straightFlyKeybindLineEdit_textChanged(const QString& text)
         QueueMessage([=] (QString* error) {
             return pipe.SendMSG(Pipe::SetStraightFlyKeybind, ui->straightFlyKeybindLineEdit->text().toUpper(), true, error);
         });
+}
+
+void MainWindow::on_ignoreUserInputCheckBox_stateChanged(int state)
+{
+    QueueMessage([=] (QString* error) {
+        return pipe.SendMSG(Pipe::IgnoreInput, QString("%1").arg((char)(state > 0 ? 1 : 0)), true, error);
+    });
+}
+
+void MainWindow::on_openReplaysButton_clicked()
+{
+    QProcess::startDetached("explorer.exe", QStringList() << (QDir::currentPath().replace("/", "\\") + "\\replays"));
 }

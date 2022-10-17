@@ -45,6 +45,7 @@ public:
         SetSpamRelease,
         SetSpamPlayer,
         SetSpamKeybind,
+        IgnoreInput,
     };
 private:
     HANDLE hPipe;
