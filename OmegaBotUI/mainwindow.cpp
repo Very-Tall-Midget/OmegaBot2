@@ -223,7 +223,7 @@ QStringList MainWindow::ScanDir(QDir dir)
     return list;
 }
 
-void MainWindow::LoadClicks(const Replay::StandardReplay& replay) {
+void MainWindow::LoadClicks(const Replay::Replay& replay) {
     ui->play_actualFpsLabel->setText(QString("%1").arg(replay.initialFps));
 
     int index = ui->clicksList->currentRow();
@@ -494,13 +494,6 @@ void MainWindow::on_setFPSButton_clicked()
     float fps = ui->fpsSpinBox->value();
     QueueMessage([=] (QString* error) {
         return pipe.SendMSG(Pipe::ChangeFPS, QString::fromWCharArray(ReCa<const wchar_t*>(&fps), sizeof(float) / sizeof(wchar_t)), true, error);
-    });
-}
-
-void MainWindow::on_accuracyFixCheckBox_stateChanged(int state)
-{
-    QueueMessage([=] (QString* error) {
-        return pipe.SendMSG(Pipe::AccuracyFix, QString("%1").arg((char)(state > 0 ? 1 : 0)), true, error);
     });
 }
 

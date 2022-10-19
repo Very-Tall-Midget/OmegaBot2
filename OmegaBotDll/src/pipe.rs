@@ -73,15 +73,6 @@ messages! {
             buffer
         }
     },
-    AccuracyFix(bool) | {
-        AccuracyFix(data[0] == 1)
-    } | {
-        AccuracyFix(accuracy_fix) => {
-            let mut buffer = vec![0u16; 2];
-            buffer[0] = if accuracy_fix { 1 } else { 0 };
-            buffer
-        }
-    },
     PracticeFix(bool) | {
         PracticeFix(data[0] == 1)
     } | {

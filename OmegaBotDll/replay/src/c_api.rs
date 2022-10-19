@@ -135,7 +135,7 @@ impl From<CClick> for Click {
 
 #[derive(Debug, Clone)]
 #[repr(C)]
-pub struct CStandardReplay {
+pub struct CReplay {
     pub initial_fps: f32,
     pub current_fps: f32,
     pub replay_type: CReplayType,
@@ -144,8 +144,8 @@ pub struct CStandardReplay {
     pub clicks: *mut CClick,
 }
 
-impl From<StandardReplay> for CStandardReplay {
-    fn from(replay: StandardReplay) -> Self {
+impl From<Replay> for CReplay {
+    fn from(replay: Replay) -> Self {
         let clicks: Vec<CClick> = replay
             .clicks
             .clone()
@@ -164,8 +164,8 @@ impl From<StandardReplay> for CStandardReplay {
     }
 }
 
-impl From<CStandardReplay> for StandardReplay {
-    fn from(replay: CStandardReplay) -> Self {
+impl From<CReplay> for Replay {
+    fn from(replay: CReplay) -> Self {
         let clicks: Vec<Click> = unsafe {
             std::slice::from_raw_parts(replay.clicks, replay.total_clicks)
                 .iter()
@@ -187,13 +187,13 @@ impl From<CStandardReplay> for StandardReplay {
 macro_rules! c_replay {
     ($self:ident as $replay:ident $code:block) => {
         #[allow(unused_mut)]
-        let mut $replay: StandardReplay = $self.clone().into();
+        let mut $replay: Replay = $self.clone().into();
         $code;
         *$self = $replay.into();
     };
 }
 
-impl CStandardReplay {
+impl CReplay {
     #[no_mangle]
     pub extern "C" fn print(&self) {
         println!("{:?}", self);
@@ -201,7 +201,7 @@ impl CStandardReplay {
 
     #[no_mangle]
     pub extern "C" fn create(fps: f32, replay_type: CReplayType) -> Self {
-        StandardReplay {
+        Replay {
             initial_fps: fps,
             current_fps: fps,
             replay_type: replay_type.into(),
@@ -336,14 +336,14 @@ impl CStandardReplay {
             *success = false;
         } else {
             data.remove(0);
-            let res: Result<StandardReplay, _> = bincode::deserialize(&data);
+            let res: Result<Replay, _> = bincode::deserialize(&data);
             *success = res.is_ok();
             if let Ok(replay) = res {
                 return replay.into();
             }
         }
 
-        StandardReplay::new(0.0, ReplayType::XPos).into()
+        Replay::new(0.0, ReplayType::XPos).into()
     }
 
     #[no_mangle]

@@ -53,7 +53,7 @@ private:
 
     void LoadReplays();
     QStringList ScanDir(QDir dir);
-    void LoadClicks(const Replay::StandardReplay& replay);
+    void LoadClicks(const Replay::Replay& replay);
 
     bool SendMessages(QString* error);
     template<typename T>
@@ -68,7 +68,6 @@ private slots:
     void on_replayTypeComboBox_currentIndexChanged(int index);
     void on_frameAdvanceCheckBox_stateChanged(int state);
     void on_setFPSButton_clicked();
-    void on_accuracyFixCheckBox_stateChanged(int state);
     void on_practiceFixCheckBox_stateChanged(int state);
     void on_setRespawnTimeButton_clicked();
     void on_setSpeedButton_clicked();

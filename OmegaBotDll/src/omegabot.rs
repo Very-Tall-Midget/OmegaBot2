@@ -318,10 +318,6 @@ impl OmegaBot {
                 }
                 Some(Message::Received)
             }
-            Message::AccuracyFix(accuracy_fix) => {
-                self.replay_handler.set_accuracy_fix(accuracy_fix);
-                Some(Message::Received)
-            }
             Message::PracticeFix(practice_fix) => {
                 self.practice_fix.set_active(practice_fix);
                 Some(Message::Received)

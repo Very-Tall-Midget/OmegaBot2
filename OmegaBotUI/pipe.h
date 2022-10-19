@@ -20,7 +20,6 @@ public:
         Speedhack,
         RespawnTime,
         FrameAdvance,
-        AccuracyFix,
         PracticeFix,
         SetNoClip,
 
