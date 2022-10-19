@@ -24,8 +24,9 @@ messages! {
         Error(string_from_utf16!(data))
     } | {
         Error(err) => {
-            let mut buffer = vec![0u16; err.len() + 1];
+            let mut buffer = vec![0u16; err.len()];
             buffer.copy_from_slice(err.encode_utf16().collect::<Vec<u16>>().as_slice());
+            buffer.push(0);
             buffer
         }
     },
@@ -100,8 +101,9 @@ messages! {
         SaveReplay(string_from_utf16!(data))
     } | {
         SaveReplay(filename) => {
-            let mut buffer = vec![0u16; filename.len() + 1];
+            let mut buffer = vec![0u16; filename.len()];
             buffer.copy_from_slice(filename.encode_utf16().collect::<Vec<u16>>().as_slice());
+            buffer.push(0);
             buffer
         }
     },
@@ -109,8 +111,9 @@ messages! {
         LoadReplay(string_from_utf16!(data))
     } | {
         LoadReplay(filename) => {
-            let mut buffer = vec![0u16; filename.len() + 1];
+            let mut buffer = vec![0u16; filename.len()];
             buffer.copy_from_slice(filename.encode_utf16().collect::<Vec<u16>>().as_slice());
+            buffer.push(0);
             buffer
         }
     },

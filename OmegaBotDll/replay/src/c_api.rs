@@ -331,16 +331,11 @@ impl CReplay {
         let filename =
             String::from_utf16(unsafe { std::slice::from_raw_parts(filename, filename_length) })
                 .unwrap();
-        let mut data = std::fs::read(filename).unwrap();
-        if *data.get(0).unwrap_or(&1) != 0 {
-            *success = false;
-        } else {
-            data.remove(0);
-            let res: Result<Replay, _> = bincode::deserialize(&data);
-            *success = res.is_ok();
-            if let Ok(replay) = res {
-                return replay.into();
-            }
+        let data = std::fs::read(filename).unwrap();
+        let res: Result<Replay, _> = bincode::deserialize(&data);
+        *success = res.is_ok();
+        if let Ok(replay) = res {
+            return replay.into();
         }
 
         Replay::new(0.0, ReplayType::XPos).into()

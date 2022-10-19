@@ -357,7 +357,7 @@ impl ReplayHandler {
     pub fn load_replay(&mut self, filename: String) -> Option<Message> {
         let data = std::fs::read(filename);
         if let Ok(data) = data {
-            let res = Replay::deserialise(data[1..].to_vec());
+            let res = Replay::deserialise(data);
             if let Ok(res) = res {
                 self.replay = res;
                 Some(Message::Received)
