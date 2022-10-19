@@ -180,7 +180,6 @@ impl ReplayHandler {
     pub fn on_update(&mut self, play_layer: gd::PlayLayer) {
         if unsafe { !play_layer.is_dead() && !*play_layer.is_paused() } {
             let old_fps = self.get_fps();
-            let frame = self.get_frame();
             if self.state == ReplayHandlerState::Playing {
                 let frame = self.get_frame();
                 unknown_replay! {
@@ -192,7 +191,14 @@ impl ReplayHandler {
                                 }
                                 ReplayType::Frame => Location::Frame(frame),
                             },
-                            ReplayHandler::handle_click,
+                            |c| unsafe {
+                                if let ClickType::FpsChange(_) = c.click_type {
+                                    OMEGABOT.update_fps();
+                                    OMEGABOT.on_fps_change(play_layer, old_fps);
+                                } else {
+                                    OMEGABOT.click(gd::GameManager::get().play_layer(), c.click_type);
+                                }
+                            },
                         );
                     }
                 }

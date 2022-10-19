@@ -212,11 +212,12 @@ impl PracticeFix {
     }
 
     pub fn remove_checkpoint(&mut self) {
+        self.checkpoints.pop();
+
         if self.checkpoints.is_empty() {
             self.activated_objects.clear();
             self.activated_objects_p2.clear();
         } else {
-            self.checkpoints.pop();
             self.activated_objects
                 .truncate(self.checkpoints.last().unwrap().number_of_activated_objects);
             self.activated_objects_p2.truncate(
