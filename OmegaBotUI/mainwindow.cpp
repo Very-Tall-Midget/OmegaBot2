@@ -357,6 +357,8 @@ void MainWindow::on_recordButton_clicked()
         QueueMessage([=] (QString* error) {
             if (pipe.SendMSG(Pipe::Append, true, error)) {
                 recording = true;
+                playing = false;
+                ui->playButton->setText(tr("Play"));
                 ui->recordButton->setText(tr("Appending..."));
                 return true;
             } else {
