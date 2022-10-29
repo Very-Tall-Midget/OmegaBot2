@@ -214,10 +214,10 @@ impl CReplay {
     #[no_mangle]
     pub extern "C" fn free_clicks(&mut self) {
         unsafe {
-            Box::from_raw(std::slice::from_raw_parts_mut(
+            drop(Box::from_raw(std::slice::from_raw_parts_mut(
                 self.clicks,
                 self.total_clicks,
-            ));
+            )));
         }
     }
 

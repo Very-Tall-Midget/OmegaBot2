@@ -161,6 +161,8 @@ impl OmegaBot {
         self.pipe.connect();
         unsafe {
             self.create_console();
+            self.setup_panic_hook();
+
             println!("Initialising...");
             hooks::hook();
         }
@@ -401,6 +403,36 @@ impl OmegaBot {
         winapi::um::consoleapi::AllocConsole();
         winapi::um::wincon::SetConsoleTitleA(lpcstr!("OmegaBot Console"));
         println!("Console initialised");
+    }
+
+    fn setup_panic_hook(&self) {
+        // https://doc.rust-lang.org/std/panic/struct.PanicInfo.html
+        std::panic::set_hook(Box::new(|panic_info| {
+            let err = panic_info.payload().downcast_ref::<&str>();
+            let location = panic_info.location();
+
+            if err.is_some() {
+                print!("Error! {:?} ", err.unwrap());
+            } else {
+                print!("Error! ");
+            }
+
+            if location.is_some() {
+                println!(
+                    "at file '{}' at line {}",
+                    location.unwrap().file(),
+                    location.unwrap().line()
+                );
+            } else {
+                println!();
+            }
+
+            println!("Press enter to exit...");
+
+            let mut _string = String::new();
+            std::io::stdin().read_line(&mut _string).unwrap();
+            std::process::exit(-1);
+        }));
     }
 
     pub fn on_init(&mut self, _level: usize) {}
