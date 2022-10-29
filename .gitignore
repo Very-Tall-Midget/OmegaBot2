@@ -1,6 +1,1 @@
-/build-UI-32bit-Release
-/build-UI-32bit-Debug
-/build-UI-32bit-Profile
-/build-UI-64bit-Release
-/build-UI-64bit-Debug
-/build-UI-64bit-Profile
+/build-*

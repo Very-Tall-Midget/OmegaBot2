@@ -46,7 +46,7 @@ impl Default for ReplayHandler {
         Self {
             state: ReplayHandlerState::Idle,
             default_replay_type: ReplayType::Frame,
-            replay: Replay::new(60., ReplayType::Frame).into(),
+            replay: Replay::new(60., ReplayType::Frame),
             default_fps: 60.,
             frame_offset: 0,
             time_offset: 0.,
